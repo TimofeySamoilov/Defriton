@@ -15,21 +15,20 @@ public class Fireball : MonoBehaviour
 
     public void Launch(Vector3 direction)
     {
-        // Задаём постоянную скорость в указанном направлении
         rb.linearVelocity = direction.normalized * speed;
-        // Уничтожим через время, если ни во что не попал
         Destroy(gameObject, lifetime);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Здесь можно проверять, попали ли во врага
-        // if (other.TryGetComponent<EnemyHealth>(out var enemy))
-        // {
-        //     enemy.TakeDamage(damage);
-        // }
+        // Попробуем получить компонент здоровья врага
+        EnemyHealth enemy = other.GetComponent<EnemyHealth>();
+        if (enemy != null)
+        {
+            enemy.TakeDamage(damage);
+        }
 
-        // После попадания уничтожаем фаербол
+        // Уничтожаем фаербол при любом столкновении (можно доработать, чтобы не уничтожался о стены)
         Destroy(gameObject);
     }
 }

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
-public class EnemyMovement : MonoBehaviour
+public class VampireMovement : MonoBehaviour
 {
     [SerializeField] private Transform player;
 
@@ -17,12 +17,13 @@ public class EnemyMovement : MonoBehaviour
 
     private void Update()
     {
-
-        Debug.Log(agent.isOnNavMesh);
-        Debug.Log(agent.remainingDistance);
         if (player != null)
         {
             agent.SetDestination(player.position);
+
+            float currentSpeed = agent.velocity.magnitude;
+            float normalizedSpeed = currentSpeed / agent.speed;
+            animator.SetFloat("Speed", normalizedSpeed);
         }
     }
 }
