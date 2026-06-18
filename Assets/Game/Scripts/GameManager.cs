@@ -13,18 +13,20 @@ public class GameManager : MonoBehaviour
 
     public void NewGame()
     {
+        Debug.Log("NewGame <<<<");
         menuPanel.SetActive(false);
-        Debug.Log("Новая игра начата");
     }
 
     public void OpenSettings()
     {
+        Debug.Log("OpenSettings <<<<");
         menuPanel.SetActive(false);
         settingsPanel.SetActive(true);
     }
 
     public void CloseSettings()
     {
+        Debug.Log("CloseSettings <<<<");
         settingsPanel.SetActive(false);
         menuPanel.SetActive(true);
     }

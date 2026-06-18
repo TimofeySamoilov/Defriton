@@ -20,6 +20,9 @@ public class EnemyHealth : MonoBehaviour
         if (currentHealth <= 0f)
         {
             Die();
+        } else
+        {
+            animator.SetTrigger("Hit");
         }
     }
 
