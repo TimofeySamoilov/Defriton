@@ -10,13 +10,20 @@ public class PlayerHealth : MonoBehaviour
     [Header("UI")]
     [SerializeField] private Slider healthSlider;
 
+    private Animator animator;
+
+    public bool IsAlive => currentHealth > 0;
+
     void Start()
     {
+        animator = GetComponent<Animator>();
         currentHealth = maxHealth;
         UpdateHealthUI();
     }
 
     public void TakeDamage(float damage) {
+        if (!IsAlive) return;
+
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
@@ -30,6 +37,7 @@ public class PlayerHealth : MonoBehaviour
     }
 
     private void Die() {
+        animator.SetTrigger("Dead");
         Debug.Log("Игрок умер");
     }
 
