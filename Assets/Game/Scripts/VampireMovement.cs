@@ -6,48 +6,71 @@ public class VampireMovement : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform player;
-    private NavMeshAgent agent;
-    private Animator animator;
 
     [Header("Attack Settings")]
     [SerializeField] private float attackRange = 2.0f;
     [SerializeField] private float attackCooldown = 2.0f; // время между атаками
+    [SerializeField] private float damage = 10f;
     private float lastAttackTime = -10f; // чтобы сразу можно было атаковать
     private bool isAttacking = false;
+
+    [Header("Detection Settings")]
+    [SerializeField] private float detectionRange = 15f;
+
+    private NavMeshAgent agent;
+    private Animator animator;
+    private EnemyHealth enemyHealth;
+    private Collider col;
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+        col = GetComponent<Collider>();
+        enemyHealth = GetComponent<EnemyHealth>();
+
+        if (enemyHealth != null)
+        {
+            enemyHealth.OnDeath.AddListener(HandleDeath);
+        }
     }
 
     private void Update()
     {
         if (player == null) return;
 
-        float distance = Vector3.Distance(transform.position, player.position);
-
-        // Если уже атакуем — не двигаемся и ждём окончания
-        if (isAttacking)
+        // Получаем компонент здоровья игрока
+        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+        if (playerHealth == null || !playerHealth.IsAlive)
         {
-            // Здесь можно проверить, закончилась ли анимация, и выйти из состояния
-            // Но проще использовать таймер или событие анимации.
-            // Пока используем просто таймер (но лучше через Animation Event)
+            // Игрок мёртв – останавливаем всё
+            agent.isStopped = true;
+            animator.SetFloat("Speed", 0f);
+            isAttacking = false; // сбрасываем состояние атаки, если оно было
             return;
         }
 
-        // Проверяем, можем ли атаковать
+        // Остальной код (расчёт дистанции, атака, движение) – без изменений
+        float distance = Vector3.Distance(transform.position, player.position);
+
+        if (distance > detectionRange)
+        {
+            agent.isStopped = true;
+            animator.SetFloat("Speed", 0f);
+            isAttacking = false;
+            return;
+        }
+
+        if (isAttacking) return;
+
         if (distance <= attackRange && Time.time >= lastAttackTime + attackCooldown)
         {
             Attack();
             return;
         }
 
-        // Иначе — двигаемся к игроку
         agent.isStopped = false;
         agent.SetDestination(player.position);
-
-        // Анимация скорости
         float currentSpeed = agent.velocity.magnitude;
         float normalizedSpeed = currentSpeed / agent.speed;
         animator.SetFloat("Speed", normalizedSpeed);
@@ -68,23 +91,29 @@ public class VampireMovement : MonoBehaviour
         // Запоминаем время атаки
         lastAttackTime = Time.time;
 
-        // Включаем таймер для выхода из состояния атаки (если нет Animation Event)
-        // Здесь можно использовать Invoke или корутину.
-        Invoke(nameof(EndAttack), 1.0f); // предположим, анимация длится 1 секунду
-        // Лучше использовать Animation Event — см. ниже.
+        if (player != null)
+        {
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+                playerHealth.TakeDamage(damage);
+        }
+
+        Invoke(nameof(EndAttack), 1.0f);
     }
 
     private void EndAttack()
     {
         isAttacking = false;
         agent.isStopped = false;
-        // Движение возобновится в следующем Update
     }
 
-    // Этот метод можно вызвать из Animation Event в конце анимации атаки
-    // Тогда не нужен Invoke.
-    public void OnAttackAnimationEnd()
+    private void HandleDeath()
     {
-        EndAttack();
+        if (agent != null) agent.enabled = false;
+        this.enabled = false;
+
+        if (col != null) col.enabled = false;
+
+        animator.SetTrigger("Dead");
     }
 }
